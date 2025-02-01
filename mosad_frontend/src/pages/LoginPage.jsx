@@ -1,21 +1,31 @@
-import { CheckBox, Label, LockOutlined } from "@mui/icons-material";
-import { Avatar, Box, Button,Grid2, Container, FormControlLabel, Input, Paper, TextField, Typography } from "@mui/material";
-import { useState, useEffect } from "react";
+import { CheckBox, LockOutlined } from "@mui/icons-material";
+import { Avatar, Button,Grid2, Container, FormControlLabel, Input, Paper, TextField, Typography } from "@mui/material";
+import { useState, useRef } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { loginRequest } from "../services/apiUserService";
+import useAuth from "../hooks/useAuth"
+import PopUp from "../component/PopUp";
+import ForgotPasswordForm from "../forms/ForgotPasswordForm";
 
+const LoginPage = () => {
+    const{setAuth}= useAuth();
 
-const LoginPage = ({ setIsLoggedIn, isLoggedIn }) => {
+    const [openForgotPasswordPopup,setOpenForgotPasswordPopup]=useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Check if user is already logged in and try to navigate to home
-    useEffect(() => {
-        if (isLoggedIn && location.pathname === '/') {
-            navigate('/home');
-        }
-    }, [isLoggedIn, location.pathname]);
 
+    
+    const forgotPasswordFormRef = useRef();
+
+  const handleCancelButtonAction = () => {
+    
+    if (forgotPasswordFormRef.current?.resetForm) {
+      forgotPasswordFormRef.current.resetForm();
+    }
+    setOpenForgotPasswordPopup(false); 
+    window.location.reload(); 
+  };
 
     //Request data inital state
     const initalLoginState = {
@@ -31,16 +41,13 @@ const LoginPage = ({ setIsLoggedIn, isLoggedIn }) => {
     }
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const response = await loginRequest(loginData);
-            const { success, message } = response.data;
-            localStorage.setItem('token', message);
-            setIsLoggedIn(true);
-            navigate('/home', { replace: true }); // Used replace to prevent back navigation
-        }
-        catch (err) {
-
-        }
+        const response = await loginRequest(loginData);
+        const { Authenticated, access_token,refresh_token } = response.data;
+        localStorage.setItem("token",access_token)
+        localStorage.setItem("refresh_token",refresh_token)
+        setAuth({refresh_token,Authenticated,username:loginData.username})
+        navigate('/home', { replace: true }); // Used replace to prevent back navigation
+       
     }
     return (
         <Container maxWidth="xs">
@@ -88,6 +95,7 @@ const LoginPage = ({ setIsLoggedIn, isLoggedIn }) => {
                                 </Grid2>
                                 <Grid2 size={{xs:12}} mb={1}>
                                     <TextField
+                                        type="password"
                                         name="password"
                                         placeholder="Password"
                                         fullWidth
@@ -105,9 +113,10 @@ const LoginPage = ({ setIsLoggedIn, isLoggedIn }) => {
                                     />
                                 </Grid2>
                                 <Grid2 size={{xs:6}}>
-                                    <Typography>
-                                        Forgot password
-                                    </Typography>
+                                <Button variant="text" size="small" 
+                                    onClick={(e)=>(setOpenForgotPasswordPopup(true))}>
+                                    Forgot passowrd
+                                </Button>
                                 </Grid2>
                                 <Grid2 size={{xs:12}} >
                                     <Button
@@ -127,10 +136,10 @@ const LoginPage = ({ setIsLoggedIn, isLoggedIn }) => {
                     </Grid2>
                 </Grid2>
             </Paper>
+            <PopUp popUpTitle="Reset Your Password"  openPopup={openForgotPasswordPopup} setOpenPopup={setOpenForgotPasswordPopup} setCancelButtonAction={handleCancelButtonAction} isDefaultButtonsDisplay={false}>
+                <ForgotPasswordForm/>
+            </PopUp>
         </Container>
-
     )
-
 }
-
 export default LoginPage;

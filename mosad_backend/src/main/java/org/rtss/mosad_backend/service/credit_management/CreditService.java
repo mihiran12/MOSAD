@@ -1,105 +1,186 @@
 package org.rtss.mosad_backend.service.credit_management;
 
-import org.rtss.mosad_backend.dto.credit_dtos.RepaymentRequestDTO;
-import org.rtss.mosad_backend.dto.credit_dtos.RepaymentResponseDTO;
-import org.rtss.mosad_backend.dto.credit_dtos.CreditDTO;
-import org.rtss.mosad_backend.dto.credit_dtos.CreditDetailsDTO;
-import org.rtss.mosad_backend.dto.credit_dtos.RepaymentDTO;
+import org.rtss.mosad_backend.dto.credit_dtos.*;
 import org.rtss.mosad_backend.dto_mapper.credit_dto_mapper.CreditDTOMapper;
-import org.rtss.mosad_backend.dto_mapper.credit_dto_mapper.RepaymentDTOMapper;
 import org.rtss.mosad_backend.entity.credit.Credit;
 import org.rtss.mosad_backend.entity.credit.Repayment;
+import org.rtss.mosad_backend.entity.customer.Customer;
+import org.rtss.mosad_backend.exceptions.ObjectNotValidException;
 import org.rtss.mosad_backend.repository.credit_repository.CreditRepository;
 import org.rtss.mosad_backend.repository.credit_repository.RepaymentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.rtss.mosad_backend.repository.customer_repository.CustomerRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class CreditService {
-    @Autowired
-    private CreditRepository creditRepository;
 
-    @Autowired
-    private RepaymentRepository repaymentRepository;
+    private final CreditRepository creditRepository;
 
-    @Autowired
-    private CreditDTOMapper creditDTOMapper;
+    private final RepaymentRepository repaymentRepository;
 
-    @Autowired
-    private RepaymentDTOMapper repaymentDTOMapper;
+    private final CreditDTOMapper creditDTOMapper;
 
-    public CreditDTO saveCredit(CreditDTO creditDTO) {
-        return creditDTOMapper.toDTO(creditRepository.save(creditDTOMapper.toEntity(creditDTO)));
+    private final CustomerRepository customerRepository;
+
+    public CreditService(CreditRepository creditRepository, RepaymentRepository repaymentRepository, CreditDTOMapper creditDTOMapper, CustomerRepository customerRepository) {
+        this.creditRepository = creditRepository;
+        this.repaymentRepository = repaymentRepository;
+        this.creditDTOMapper = creditDTOMapper;
+        this.customerRepository = customerRepository;
     }
 
+    // Save credit
+    public ResponseEntity<CreditDTO> saveCredit(CreditDTO creditDTO) {
+
+        if (creditDTO.getCustomerId() == null) {
+            throw new IllegalArgumentException("Customer ID must not be null ");
+        }
+
+        // Fetch the Customer entity using customer_id from the DTO
+        Customer customer = customerRepository.findById(creditDTO.getCustomerId())
+                .orElseThrow(() -> new ObjectNotValidException(new HashSet<>(List.of("Customer not found"))));
+
+        // Map the CreditDTO to a Credit entity
+        Credit credit=creditDTOMapper.toEntity(creditDTO);
+        credit.setCustomer(customer); // Associate the Customer entity
+
+        // Save the Credit entity
+        Credit savedCredit = creditRepository.save(credit);
+
+        // Convert the saved Credit entity back to a DTO
+        return new ResponseEntity<>(creditDTOMapper.toDTOWithCustomer(savedCredit), HttpStatus.CREATED);
+    }
+
+
+    // Get all credits
     public List<CreditDTO> getAllCredits() {
-        return creditDTOMapper.toDTOList(creditRepository.findAll());
+        try {
+            return creditDTOMapper.toDTOList(creditRepository.findAll());
+        } catch (Exception ex) {
+            throw new ObjectNotValidException(new HashSet<>(List.of("Failed to fetch credits: " + ex.getMessage())));
+        }
     }
 
-    //get credit details with customer name and contact number
-    public List<CreditDetailsDTO> getAllCreditDetails() {
-        List<Object[]> results = creditRepository.findAllCreditDetails();
+    //Get credit by id
+    public CreditDTO getCreditById(Long creditId) {
+        try {
+            Credit credit = creditRepository.findById(creditId)
+                    .orElseThrow(() -> new RuntimeException("Credit not found for ID: " + creditId));
+            return creditDTOMapper.toDTOWithCustomer(credit);
+        } catch (Exception ex) {
+            throw new ObjectNotValidException(new HashSet<>(List.of("Failed to fetch credit: " + ex.getMessage())));
+        }
+    }
 
-        // Use a map to group repayments by creditId
-        Map<Long, CreditDetailsDTO> creditDetailsMap = new HashMap<>();
+    //Get
 
-        for (Object[] row : results) {
-            Long creditId = (Long) row[0];
-            double balance = (double) row[1];
-            Date dueDate = (Date) row[2];
-            String customerName = (String) row[3];
-            String contactNumber = (String) row[4];
 
-            // Repayment details
-            Long repaymentId = (Long) row[5];
-            Date repaymentDate = (Date) row[6];
-            Double repaymentAmount = (Double) row[7];
+    // Get all credits with repayments
+    public List<CreditDetailsDTO> getAllCreditDetails(String CustomerType) {
+        System.out.println(CustomerType);
+        try {
 
-            // Get or create CreditDetailsDTO
-            CreditDetailsDTO creditDetails = creditDetailsMap.computeIfAbsent(creditId, id ->
-                    new CreditDetailsDTO(creditId, customerName, contactNumber, balance, dueDate, new ArrayList<>())
+            List<Object[]> results;
+            if (CustomerType.equalsIgnoreCase("Retail")) {
+                results = creditRepository.findAllRetailCustomerCreditDetails();
+            } else {
+                results = creditRepository.findAllNormalCustomerCreditDetails();
+            }
+            // Group repayments by creditId using a map
+            Map<Long, CreditDetailsDTO> creditDetailsMap = new HashMap<>();
+
+            for (Object[] row : results) {
+                Long creditId = (Long) row[0];
+                double balance = (double) row[1];
+                Date dueDate = (Date) row[2];
+                String customerName = (String) row[3];
+                String contactNumber = (String) row[4];
+
+                // Repayment details
+                Long repaymentId = (Long) row[5];
+                Date repaymentDate = (Date) row[6];
+                Double repaymentAmount = (Double) row[7];
+
+                //Bill details
+                Long billId = (Long) row[8];
+
+
+                // Get or create CreditDetailsDTO
+                CreditDetailsDTO creditDetails = creditDetailsMap.computeIfAbsent(creditId, id ->
+                        new CreditDetailsDTO(creditId, customerName, contactNumber, balance, dueDate, new ArrayList<>(),billId)
+                );
+
+                // Add repayment if not already present
+                if (repaymentId != null) {
+                    boolean exists = creditDetails.getRepayments().stream()
+                            .anyMatch(r -> r.getRepaymentId().equals(repaymentId));
+                    if (!exists) {
+                        creditDetails.getRepayments().add(new RepaymentDTO(repaymentId, repaymentDate, repaymentAmount));
+                    }
+                }
+            }
+
+            return new ArrayList<>(creditDetailsMap.values());
+        } catch (Exception ex) {
+            throw new ObjectNotValidException(new HashSet<>(List.of("Failed to fetch credit details: " + ex.getMessage())));
+        }
+    }
+
+    // Add repayment
+    public ResponseEntity<RepaymentResponseDTO> addRepayment(RepaymentRequestDTO repaymentRequest) {
+        try {
+            Credit credit = creditRepository.findById(repaymentRequest.getCreditId())
+                    .orElseThrow(() -> new ObjectNotValidException(new HashSet<>(List.of("Credit not found"))));
+
+            Repayment repayment = new Repayment();
+            repayment.setDate(repaymentRequest.getDate());
+            repayment.setAmount(repaymentRequest.getAmount());
+            repayment.setCredit(credit);
+
+            repayment = repaymentRepository.save(repayment);
+
+            RepaymentResponseDTO responseDTO = new RepaymentResponseDTO(
+                    repayment.getRepaymentId(),
+                    repayment.getDate(),
+                    repayment.getAmount(),
+                    repayment.getCredit().getCreditId()
             );
 
-            // Track unique repayments using a Set of repayment IDs
-            Set<Long> existingRepaymentIds = creditDetails.getRepayments().stream()
-                    .map(RepaymentDTO::getRepaymentId)
-                    .collect(Collectors.toSet());
-
-            // Add repayment only if it's not already added
-            if (repaymentId != null && !existingRepaymentIds.contains(repaymentId)) {
-                creditDetails.getRepayments().add(new RepaymentDTO(repaymentId, repaymentDate, repaymentAmount));
-            }
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception ex) {
+            throw new ObjectNotValidException(new HashSet<>(List.of("Failed to add repayment: " + ex.getMessage())));
         }
-
-        return new ArrayList<>(creditDetailsMap.values());
     }
 
-    public ResponseEntity<RepaymentResponseDTO> addRepayment( RepaymentRequestDTO repaymentRequest) {
-        Optional<Credit> creditOptional = creditRepository.findById(repaymentRequest.getCreditId());
-        if (creditOptional.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+    // Delete repayment by id
+    public ResponseEntity<Void> deleteRepaymentById(Long repaymentId) {
+        try {
+            Repayment repayment = repaymentRepository.findById(repaymentId)
+                    .orElseThrow(() -> new ObjectNotValidException(new HashSet<>(List.of("Repayment not found"))));
+
+            repaymentRepository.delete(repayment);
+
+            return ResponseEntity.noContent().build();
+        } catch (Exception ex) {
+            throw new ObjectNotValidException(new HashSet<>(List.of("Failed to delete repayment: " + ex.getMessage())));
         }
-
-        Credit credit = creditOptional.get();
-        Repayment repayment = new Repayment();
-        repayment.setDate(repaymentRequest.getDate());
-        repayment.setAmount(repaymentRequest.getAmount());
-        repayment.setCredit(credit);
-
-        repayment = repaymentRepository.save(repayment);
-
-        RepaymentResponseDTO responseDTO = new RepaymentResponseDTO(
-                repayment.getRepaymentId(),
-                repayment.getDate(),
-                repayment.getAmount(),
-                repayment.getCredit().getCreditId()
-        );
-
-        return ResponseEntity.ok(responseDTO);
     }
+
+    public List<Credit> getCreditsBtDueDate(String date)  {
+        Date dueDate = null;
+        try {
+            dueDate = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        return creditRepository.findCreditByDueDate(dueDate);
+    }
+
 
 }

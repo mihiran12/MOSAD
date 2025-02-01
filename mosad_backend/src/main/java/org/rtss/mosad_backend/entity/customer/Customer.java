@@ -1,75 +1,52 @@
 package org.rtss.mosad_backend.entity.customer;
 
 import jakarta.persistence.*;
-import org.rtss.mosad_backend.entity.credit.Credit;
-
-import java.util.List;
 
 @Entity
 public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long customerId;
 
-    @Column(nullable = false)
-    private String name;
+    private String customerName;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CustomerContact> contacts;
+    private String customerType;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Credit> credits;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "customer_contact_id")
+    private CustomerContact customerContact;
 
-    public Customer() {
+
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public Customer(Long id, String name, List<CustomerContact> contacts, List<Credit> credits) {
-        this.id = id;
-        this.name = name;
-        this.contacts = contacts;
-        this.credits = credits;
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 
-    public Long getId() {
-        return id;
+    public String getCustomerName() {
+        return customerName;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
     }
 
-    public String getName() {
-        return name;
+    public String getCustomerType() {
+        return customerType;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCustomerType(String customerType) {
+        this.customerType = customerType;
     }
 
-    public List<CustomerContact> getContacts() {
-        return contacts;
+    public CustomerContact getCustomerContact() {
+        return customerContact;
     }
 
-    public void setContacts(List<CustomerContact> contacts) {
-        this.contacts = contacts;
-    }
-
-    public List<Credit> getCredits() {
-        return credits;
-    }
-
-    public void setCredits(List<Credit> credits) {
-        this.credits = credits;
-    }
-
-    @Override
-    public String toString() {
-        return "Customer{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", contacts=" + contacts +
-                ", credits=" + credits +
-                '}';
+    public void setCustomerContact(CustomerContact customerContact) {
+        this.customerContact = customerContact;
     }
 }

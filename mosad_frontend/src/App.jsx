@@ -1,83 +1,119 @@
 import './App.css'
-import HomePage from './pages/home/HomePage'
-import BillPage from './pages/bill_section/BillPage'
-import CreditPage from './pages/credit_section/CreditPage'
-import StockPage from './pages/stock_section/StockPage'
-import StockPageLayout from './pages/stock_section/StockPageLayout'
-import BranchPage from './pages/branch_section/BranchPage'
-import DackPage from './pages/dack_section/DackPage'
-import EmployeePage from './pages/employee_section/EmployeePage'
-import ReportPredictionPage from './pages/prediction_report_section/ReportPredictionPage'
-import RetailPage from './pages/retail_section/RetailPage'
-import ServicesPage from './pages/services_section/ServicesPage'
+import React,{useEffect, lazy} from 'react';
+import { Route,Routes,Navigate,useLocation} from 'react-router-dom';
+import { Box, Container } from '@mui/material'
+import RoutesProtector from './RoutesProtector'
+import useAuth  from "./hooks/useAuth";
+
 import LoginPage from './pages/LoginPage'
+
+import backgroundImage from './assets/bg-image.jpg'
+
+import HomePage from './pages/home/HomePage'
 import Footer from './component/Footer';
 import HeaderBar from './component/Header';
-import BrandPage from './pages/stock_section/BrandPage'
-import ItemView from './pages/stock_section/ItemView'
-import { Route,Routes,Navigate } from 'react-router-dom';
-import { useState,useEffect } from 'react';
-import { Box, Container } from '@mui/material'
-import UserManagement from './pages/users_section/UserManagement'
-import backgroundImage from './assets/bg-image.jpg';
-import { red } from '@mui/material/colors'
+
+const BillPage=lazy(()=>import('./pages/bill_section/BillPage'));
+const CreditPage=lazy(()=>import('./pages/credit_section/CreditPage'));
+const DackPage =lazy(()=>import( './pages/dack_section/DackPage'));
+const EmployeePage =lazy(()=>import( './pages/employee_section/EmployeePage'));
+const ReportPredictionPage =lazy(()=>import( './pages/prediction_report_section/ReportPredictionPage'));
+const RetailPageLayout =lazy(()=>import( './pages/retail_section/layout/RetailPageLayout'));
+const ServicesPage =lazy(()=>import( './pages/services_section/ServicesPage'));
+
+const UserManagementLayout =lazy(()=>import( './pages/users_section/UserManagementLayout'));
+const UserDetailsView =lazy(()=> import( './pages/users_section/UserDetailsView'));
+const AllUsersView =lazy(()=>import( './pages/users_section/AllUsersView'));
+
+const StockPageLayout =lazy(()=>import( './pages/stock_section/StockPageLayout'));
+const StockPage =lazy(()=>import( './pages/stock_section/StockPage'));
+const BrandPage =lazy(()=>import( './pages/stock_section/BrandPage'));
+const ItemView =lazy(()=>import( './pages/stock_section/ItemView'));
+
+
+const BranchPageLayout =lazy(()=>import( './pages/branch_section/BranchPageLayout'));
+const BranchPage =lazy(()=>import( './pages/branch_section/BranchPage'));
+const BranchStockLayout =lazy(()=>import( './pages/branch_section/BranchStockLayout'));
+
+const PaymentHistory =lazy(()=>import( './pages/retail_section/PaymentHistory'));
+const PurchaseHistory =lazy(()=>import( './pages/retail_section/PurchaseHistory'));
+const IncompleteTransactions =lazy(()=>import( './pages/retail_section/IncompleteTransactions'));
+const ProductAvailabilityChecker =lazy(()=>import( './pages/retail_section/ProductAvailabilityChecker'));
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); 
-  
+  const {auth}=useAuth();
 
+  //Scroll to top of the page alway wehn 
+  //use location hook had change
+  const location = useLocation();
   useEffect(() => {
-    //Check if user is already logged in
-    const storedToken = localStorage.getItem('token'); 
-    if (storedToken) {
-      setIsLoggedIn(true); 
-    }
-  }, []);
+    window.scrollTo(0, 0); 
+  }, [location]);  
 
   return (
     <Container maxWidth="xl" disableGutters sx={{
       width:'100vw',
-      backgroundImage: `url(${!isLoggedIn && backgroundImage})`, // Apply background only on login page
+      backgroundImage: `url(${!auth.Authenticated && backgroundImage})`, // Apply background only on login page
       backgroundSize: 'cover', 
       backgroundPosition: 'center' ,
       height:'100vh'}}>
-      <Box maxWidth="xl">
-        {isLoggedIn && <HeaderBar setIsLoggedIn={setIsLoggedIn}/>} 
+     <Box maxWidth="xl">
+        { auth.Authenticated && <HeaderBar/>} 
       </Box>
       
-      <Box  sx={{ p: 3}} >
+      <Box  sx={{ p: 2,minHeight: '100vh'}} >
         <Routes>
-          <Route path='/'
-            element={!isLoggedIn ? <LoginPage setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} /> : <Navigate to="/home" replace />} /> 
-          <Route path="/home" 
-            element={isLoggedIn ? <HomePage /> : <Navigate to="/" replace />} />
-          <Route path="/stock" element={isLoggedIn ? <StockPageLayout /> : <Navigate to="/" replace />} > 
-            <Route index element={<StockPage />}/>
-            <Route path="brand" element={<BrandPage />}/>
+        <Route path='/' element={auth.Authenticated ? <Navigate to="/home" replace /> : <LoginPage/>} /> 
+        <Route element={<RoutesProtector />}>
+          <Route path="/home" element={ <HomePage />} />
+
+          <Route path="/stock" element={ <StockPageLayout />} > 
+            <Route index element={<StockPage isFromBranch={false}/>}/>
+            <Route path="brand" element={<BrandPage isFromBranch={false}/>}/>
             <Route path="item-view" element={<ItemView />} /> 
           </Route>
-          <Route path="/branch" element={isLoggedIn ? <BranchPage /> : <Navigate to="/" replace />} />
-          <Route path="/credit" element={isLoggedIn ? <CreditPage /> : <Navigate to="/" replace />} />
-          <Route path="/bill" element={isLoggedIn ? <BillPage /> : <Navigate to="/" replace />} />
-          <Route path="/dack" element={isLoggedIn ? <DackPage /> : <Navigate to="/" replace />} />
-          <Route path="/retail" element={isLoggedIn ? <RetailPage /> : <Navigate to="/" replace />} />
-          <Route path="/future" element={isLoggedIn ? <ReportPredictionPage /> : <Navigate to="/" replace />} />
-          <Route path="/employee" element={isLoggedIn ? <EmployeePage /> : <Navigate to="/" replace />} />
-          <Route path="/services" element={isLoggedIn ? <ServicesPage /> : <Navigate to="/" replace />} />
-          <Route path="/user" element={isLoggedIn ? <UserManagement /> : <Navigate to="/" replace />} />
-        
+
+          <Route path="/branch" element={ <BranchPageLayout />} >
+            <Route index element={<BranchPage/>}/>
+            <Route path="bill-history" element={<BillPage />}/>
+            <Route path="stock" element={<BranchStockLayout />}>
+              <Route index element={<StockPage isFromBranch={true}/>}/>
+              <Route path="brand" element={<BrandPage isFromBranch={true}/>}/>
+              <Route path="item-view" element={<ItemView />}/>
+            </Route>
+            <Route path="employee-view" element={<EmployeePage />}/>
+          </Route>
+
+          <Route path="/credit" element={ <CreditPage />} />
+          <Route path="/bill" element={ <BillPage />} />
+          <Route path="/dack" element={ <DackPage />} />
+
+          <Route path="/retail" element={ <RetailPageLayout />} >
+              <Route index element={ <PaymentHistory />} />
+              <Route path="purchase-history" element={ <PurchaseHistory />} />
+              <Route path="incomplete-transactions" element={ <IncompleteTransactions />} />
+              <Route path="product-availability" element={ <ProductAvailabilityChecker />} />
+          </Route>
+          <Route path="/future" element={ <ReportPredictionPage />} />
+          <Route path="/employee" element={ <EmployeePage />} />
+          <Route path="/services" element={ <ServicesPage />} />
+          
+          <Route path="/user" element={ <UserManagementLayout />} >
+            <Route index element={<UserDetailsView/>}/>
+            <Route path="view-all" element={<AllUsersView />}/>
+          </Route>
+        </Route>
         </Routes>
       </Box>
 
       <Box maxWidth="xl">
-        {isLoggedIn && <Footer />}
+        {auth.Authenticated && <Footer />}
       </Box>
     </Container>
   )
 
 }
 
+
+
 export default App;
-
-
-

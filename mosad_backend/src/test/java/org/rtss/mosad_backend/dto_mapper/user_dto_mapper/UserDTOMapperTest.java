@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.rtss.mosad_backend.dto.user_dtos.UserDTO;
+import org.rtss.mosad_backend.entity.branch_management.Branch;
 import org.rtss.mosad_backend.entity.user_management.UserContacts;
 import org.rtss.mosad_backend.entity.user_management.UserRoles;
 import org.rtss.mosad_backend.entity.user_management.Users;
@@ -20,16 +21,14 @@ class UserDTOMapperTest {
     //Testing Service
     private UserDTOMapper userDTOMapper;
 
-    //Declare model mapper
-    private ModelMapper modelMapper;
-
     //Reference for user Roles and user contacts for Users object
     private UserRoles userRoles;
     private UserContacts userContacts;
 
     @BeforeEach
     void setUp() {
-        modelMapper=new ModelMapper();
+        //Declare model mapper
+        ModelMapper modelMapper = new ModelMapper();
         userDTOMapper=new UserDTOMapper(modelMapper);
 
         //Create UserRoles object for pass to the Users object
@@ -77,7 +76,8 @@ class UserDTOMapperTest {
                 "Pradeep",
                 "mymail@gmail.com",
                 userRoles,
-                new HashSet<UserContacts>(Arrays.asList(userContacts))
+                new HashSet<UserContacts>(Arrays.asList(userContacts)),
+                new Branch()
         );
 
         //when

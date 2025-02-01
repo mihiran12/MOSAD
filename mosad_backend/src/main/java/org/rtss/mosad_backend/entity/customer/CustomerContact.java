@@ -4,25 +4,36 @@ import jakarta.persistence.*;
 
 @Entity
 public class CustomerContact {
+    public CustomerContact(Long customerContactId, Customer customer, String contactNumber) {
+        this.customerContactId = customerContactId;
+        this.customer = customer;
+        this.contactNumber = contactNumber;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long customerContactId;
 
-    @Column(nullable = false)
     private String contactNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
+    public CustomerContact(String contactNumber) {
+        this.contactNumber = contactNumber;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    @OneToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    public CustomerContact() {
+
+    }
+
+    public Long getCustomerContactId() {
+        return customerContactId;
+    }
+
+    public void setCustomerContactId(Long customerContactId) {
+        this.customerContactId = customerContactId;
     }
 
     public String getContactNumber() {

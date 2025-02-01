@@ -1,63 +1,13 @@
 //set Add Item form fields
-const setItemAddFromFields = (title) => {
-    console.log(title);
-    switch (title) {
-      case "CEAT":
-       
-        return {
-          itemID: "",
-          size: "",
-          pattern: "",
-          pr: 0,
-          availableQty: 0,
-          osp: 0,
-          cp:0
-        };
-      case "tyre_presa":
-        return {
-          itemID: "",
-          tyreSize: "",
-          pattern: "",
-          ply: 0,
-          tyreCount: 0,
-          officialSellingPrice: 0,
-          vehicleType: "",
-        };
-      case "tyre_rapid":
-        return {
-          itemID: "",
-          tyreSize: "",
-          pattern: "",
-          tyreCount: 0,
-          officialSellingPrice: 0,
-          vehicleType: "",
-        };
-      case "tyre_linglong":
-        return {
-          itemID: "",
-          tyreSize: "",
-          pattern: "",
-          tyreCount: null,
-          officialSellingPrice: null,
-          vehicleType: "",
-        };
-      case "tyre_atlander":
-        return {
-          itemID: "",
-          tyreSize: "",
-          pattern: "",
-          tyreCount: 0,
-          officialSellingPrice: 0,
-          vehicleType: "",
-        };
-        
-      default:
-        return {
-          itemID: "",
-          field1: "",
-          field2: "",
-        };
+const setItemAddFromFields = (selectedCategory,selectedBrand) => {
+
+  let defaultItemFields = {itemId: "",itemName:"",itemDescription:"",companyPrice:null,retailPrice:null,discount:null};  
+  let defaultTyreFields = {itemId: "",itemName:"",itemDescription:"",companyPrice:null,retailPrice:null,discount:null,tyreSize: "",pattern: "",availableQuantity: null,vehicleType: ""};
+    
+    if(selectedCategory === "Tyre" && selectedBrand !==null){
+      return defaultTyreFields;
     }
+    return defaultItemFields;
   };
 
-  export default setItemAddFromFields;
+export default setItemAddFromFields;

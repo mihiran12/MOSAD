@@ -1,151 +1,193 @@
  import Grid from "@mui/material/Grid2";
  import { 
-   TextField, 
-   Button, 
-   FormControl, 
-   InputLabel, 
-   Select, 
-   MenuItem, 
-   Box,
-   Paper
+    Typography,
+    TextField, 
+    FormControl, 
+    InputLabel, 
+    Select, 
+    MenuItem, 
+    Paper,
+    IconButton,
+    Button,
+   
  } from '@mui/material';
-import React,{ useState, useEffect } from "react";
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
+import AddIcon from '@mui/icons-material/Add';
+import { blue } from '@mui/material/colors';
+import PropTypes from "prop-types";
 
-const initialUser={
-    userDto:{
-        username:"",
-        firstName:"",
-        lastName:"",
-        email:""
-    },
-    password:"",
-    userRoleDto:{
-        roleName:""
-    },
-    userContactDto:[{
-        contactNum:"0112536722"
-    }]
-}
-// const useStyle=makeStyles(theme=>({
-//     root:{
 
-//     }
-// }))
+export default function UserDetailsForm({onSubmit,userUpdateData,editMode,setUserUpdateData,handlePwds,pwds}){
+    let location = useLocation();
 
-const UserDetailsForm=()=>{    
-    //use sate for add and view user
-    const [userData, setUserData] = useState(initialUser);
-   //const classes=useStyle()
-
-    //Use states for editing
-    const [editMode, setEditMode] = useState(false);
-    const [selectedUserId, setSelectedUserId] = useState(null);
-    
-    const handleChange = (event) => {
+    const handleUserDtoChange = (event) => {
         const { name, value } = event.target;
-        setUserData({ ...userData, [name]: value });
+        setUserUpdateData({
+            ...userUpdateData, 
+            userDto: {
+                ...userUpdateData.userDto,
+                [name]: value 
+            }
+        });
     };
-    
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        // Handle form submission (add or update user)
-        if (editMode) {
-        // Update user logic (e.g., API call)
-        } else {
-        // Add user logic (e.g., API call)
-        }
-    };
-    
-    const handleEdit = (userId) => {
-        // Fetch user details by userId (e.g., API call)
-        // Set editMode to true
-        // Set selectedUserId
-    };
-    
-    const handleCancel = () => {
-        setEditMode(false);
-    };
-    
-    useEffect(() => {
-        // Fetch user details if there is token is saved
-        if (true) {
-        
-        }
-    }, []);
 
+    const handleUserRoleDtoChange = (event) => {
+        const { name, value } = event.target;
+        setUserUpdateData({
+            ...userUpdateData,
+            userRoleDto: {
+                ...userUpdateData.userRoleDto,
+                [name]: value
+            }
+        });
+    };
+
+    const [contactNum,setContactNum]=useState({contactNum:""});
+    const handleUserContactNumChange=(event)=>{
+        setContactNum({...contactNum,[event.target.name]:event.target.value})
+    }
+    const addNewContact=(event)=>{
+        setUserUpdateData({
+            ...userUpdateData,
+            userContactDto: [
+                ...userUpdateData.userContactDto,contactNum]})
+    }
+
+    
     return(
-        <form onSubmit={handleSubmit} >
+        <form onSubmit={onSubmit} >
+            {/* User details view */}
             <Paper elevation={1} sx={{p:2,m:2}}>
                 <Grid container spacing={2} >
                     <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField 
+                        <TextField
+                        required 
+                        disabled={!editMode}
                         label="First name" 
-                        variant="outlined" 
-                        name="firstname" 
-                        value={userData.userDto.firstName} 
-                        onChange={handleChange} 
-                        fullWidth 
+                        variant="standard" 
+                        name="firstName" 
+                        value={userUpdateData.userDto.firstName || ''} 
+                        onChange={handleUserDtoChange} 
+                        fullWidth
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#616161",
+                          },
+                        }} 
                         />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField 
+                        <TextField
+                        disabled={!editMode} 
                         label="Last name" 
-                        variant="outlined" 
-                        name="lastname" 
-                        value={userData.userDto.lastName} 
-                        onChange={handleChange} 
-                        fullWidth 
+                        variant="standard" 
+                        name="lastName" 
+                        value={userUpdateData.userDto.lastName || ''} 
+                        onChange={handleUserDtoChange} 
+                        fullWidth
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#616161",
+                          },
+                        }}
                         />
                     </Grid>
                     
                     <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField 
+                        <TextField
+                            disabled={!editMode} 
+                            required
                             label="Username" 
-                            variant="outlined" 
+                            variant="standard" 
                             name="username" 
-                            value={userData.userDto.username} 
-                            onChange={handleChange} 
+                            value={userUpdateData.userDto.username || ''} 
+                            onChange={handleUserDtoChange} 
                             fullWidth 
+                            sx={{
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                  WebkitTextFillColor: "#616161",
+                              },
+                            }}
                         />
                     </Grid>
                     
                     <Grid size={{ xs: 12, sm: 6 }}>
-                    <TextField 
+                        <TextField
+                        disabled={!editMode} 
                         label="Email" 
-                        variant="outlined" 
+                        variant="standard" 
                         name="email" 
-                        value={userData.userDto.email} 
-                        onChange={handleChange} 
-                        fullWidth 
+                        value={userUpdateData.userDto.email || ''} 
+                        onChange={handleUserDtoChange} 
+                        fullWidth
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#616161",
+                          },
+                        }} 
                     />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                     {/* User contact */}
-                        <TextField 
-                        type='password'
+                    <Grid size={{ xs: 10,sm:6}}>
+                        <TextField
+                        disabled={!editMode} 
                         label="User contact" 
-                        variant="outlined" 
+                        variant="standard" 
                         name="contactNum" 
-                        value={userData.password} 
-                        onChange={handleChange} 
-                        fullWidth 
+                        value={contactNum.contactNum|| ''} 
+                        onChange={handleUserContactNumChange} 
+                        fullWidth
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#616161",
+                          },
+                        }} 
                         />
+                    </Grid>
+                    <Grid size={{ xs: 2,sm:6}} alignContent={"end"}>
+                        <IconButton disabled={!editMode} onClick={addNewContact}>
+                            <AddIcon />
+                        </IconButton>
+                    </Grid>
+                    <Grid size={{ xs: "auto" }}>
+                    {userUpdateData.userContactDto.map((item, index) => (
+                        item.contactNum === "" ? (
+                            <Paper key={index} sx={{ backgroundColor: blue[100], textAlign: "center" }} component={Button}>
+                              No saved contact numbers
+                            </Paper>
+                          ) : (
+                            <Paper key={"ContactNumberCard"+index} sx={{ backgroundColor: blue[100], textAlign: "center", p: 1, mr: 2 }} component={Button}>
+                              {item.contactNum}
+                            </Paper>
+                          )
+                    ))}
                     </Grid>
                 </Grid>
             </Paper>
 
+            {/* User role section */}
             <Paper elevation={1} sx={{p:2,m:2}}>
                 <Grid container spacing={2} >
                 <Grid size={{ xs: 12, sm: 6 }}>
-                {/* Example of a Select field for role */}
+                <Typography>
+                     Choose your user role:
+                </Typography>
                 <FormControl fullWidth>
                     <InputLabel id="role-label">Role</InputLabel>
-                    <Select 
-                    labelId="role-label" 
-                    id="role" 
-                    value={userData.userRoleDto.roleName} 
-                    onChange={handleChange} 
-                    label="Role"
+                    <Select
+                        disabled={!editMode} 
+                        required
+                        name="roleName"
+                        labelId="role-label" 
+                        id="role" 
+                        value={userUpdateData.userRoleDto.roleName} 
+                        onChange={handleUserRoleDtoChange} 
+                        label="Role"
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#616161",
+                          },
+                        }} 
                     >
                     <MenuItem value="ADMIN">Admin</MenuItem>
                     <MenuItem value="OWNER">User</MenuItem>
@@ -158,52 +200,65 @@ const UserDetailsForm=()=>{
                 </Grid>
             </Paper>
 
+            {/* User password */}
+            {location.pathname === '/user/view-all' &&
             <Paper elevation={1} sx={{p:2,m:2}}>
             <Grid container spacing={2} >
             <Grid size={{ xs: 12, sm: 6 }}>
-                {/* Enter password */}
-                <TextField 
+                <TextField
+                    required
                     type='password'
                     label="Password" 
-                    variant="outlined" 
-                    name="password" 
-                    value={userData.password} 
-                    onChange={handleChange} 
+                    variant="standard" 
+                    name="pwd_1" 
+                    value={pwds.pwd_1} 
+                    onChange={handlePwds} 
                     fullWidth 
                 />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField 
+                    required
                     type='password'
                     label="Re-enter Password" 
-                    variant="outlined" 
-                    name="password" 
-                    value={userData.password} 
-                    onChange={handleChange} 
+                    variant="standard" 
+                    name="pwd_2" 
+                    value={pwds.pwd_2} 
+                    onChange={handlePwds} 
                     fullWidth 
                 />
-                 </Grid>
-                 </Grid>
+                </Grid>
+                </Grid>
             </Paper>
-            
-            <Box sx={{p:2,m:2}} spacing={2}>
-                <Button  variant="contained" color="primary">
-                    Add user
-                </Button>
-                <Button  variant="contained" color="primary">
-                    Delete
-                </Button>
-                <Button type="submit" variant="contained" color="primary" onClick={()=>setEditMode(true)}>
-                    {editMode ? 'Save' : 'Edit'}
-                </Button>
-                {editMode && (
-                    <Button variant="outlined" onClick={handleCancel}>
-                    Cancel
-                    </Button>
-                )}
-            </Box>
+            }
+
+           
         </form>
     );
 }
 
-export default UserDetailsForm
+UserDetailsForm.propTypes={
+    onSubmit:PropTypes.func.isRequired,
+    userUpdateData:PropTypes.shape({
+        userDto:PropTypes.shape({
+            username:PropTypes.string,
+            firstName:PropTypes.string,
+            lastName:PropTypes.string,
+            email:PropTypes.string
+        }),
+        userRoleDto:PropTypes.shape({
+            roleName:PropTypes.string
+        }),
+        userContactDto:PropTypes.arrayOf(PropTypes.shape({
+            contactNum:PropTypes.string
+        }))
+    }),
+    editMode:PropTypes.bool.isRequired,
+    setUserUpdateData:PropTypes.func,
+    handlePwds:PropTypes.func,
+    pwds:PropTypes.shape({
+        pwd_1:PropTypes.string,
+        pwd_2:PropTypes.string
+    })
+
+}

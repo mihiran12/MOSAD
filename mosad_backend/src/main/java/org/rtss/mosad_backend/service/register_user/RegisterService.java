@@ -85,7 +85,7 @@ public class RegisterService {
         checkUserRoleByName(userRoleDTO.getRoleName());
         UserRoles userRoles= convertToUserRoles(userRoleDTO);
 
-        users.setUserRoles(userRolesRepo.findUserRolesByRoleName(userRoles.getRoleName()).get());
+        users.setUserRoles(userRolesRepo.findUserRolesByRoleName(userRoles.getRoleName()).orElseGet(UserRoles::new));
 
         ArrayList<UserContactDTO> userContactDtoS=extractUserContactDTO(userRegistrationDto);
         for(UserContactDTO userContactDto:userContactDtoS){
@@ -96,6 +96,8 @@ public class RegisterService {
         storeData(users);
 
         return generateResponse(true,"User registered successfully");
+
+
     }
 
     //Extract userDTO from UserRegistrationDTO
@@ -105,13 +107,13 @@ public class RegisterService {
 
     private void uniqueUsername(String username) {
         if(usersRepo.findByUsername(username).isPresent()){
-            throw new ObjectNotValidException(new HashSet<>(List.of("User already exists")));
+            throw new ObjectNotValidException(new HashSet<>(List.of("Username already exists")));
         }
     }
 
     private void uniqueEmail(String email) {
-        if(usersRepo.findByEmail(email).isPresent()){
-            throw new ObjectNotValidException(new HashSet<>(List.of("User already exists")));
+        if(usersRepo.findByEmail(email).isPresent() && !email.isBlank()){
+            throw new ObjectNotValidException(new HashSet<>(List.of("User email already exists")));
         }
     }
 
@@ -152,7 +154,7 @@ public class RegisterService {
         return userRegistrationDTO.getUserContactDto();
     }
 
-    //map to the UserRoles entity.
+    //map to the UserContactDto entity.
     private Set<UserContacts> convertToUserContacts(ArrayList<UserContactDTO> userContactDtoList) {
         Set<UserContacts> userContactsSet = new HashSet<>();
         for(UserContactDTO userContactDto:userContactDtoList){

@@ -1,5 +1,6 @@
 package org.rtss.mosad_backend.dto.credit_dtos;
 
+import jakarta.validation.constraints.NotEmpty;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -7,21 +8,23 @@ import java.util.Date;
 @Component
 public class CreditDTO {
     private Long creditId;
-
+    @NotEmpty(message = "Balance can not be empty")
     private double balance;
-
+    @NotEmpty(message = "Due date can not be empty")
     private Date dueDate;
+    @NotEmpty(message = "Customer id can not be empty")
+    private Long customerId;
 
-    private RepaymentDTO repayments;
 
     public CreditDTO() {
     }
 
-    public CreditDTO(Long creditId, double balance, Date dueDate, RepaymentDTO repayments) {
+    public CreditDTO(Long creditId, double balance, Date dueDate,Long customerId) {
         this.creditId = creditId;
         this.balance = balance;
         this.dueDate = dueDate;
-        this.repayments = repayments;
+        this.customerId = customerId;
+
     }
 
     public Long getCreditId() {
@@ -48,11 +51,11 @@ public class CreditDTO {
         this.dueDate = dueDate;
     }
 
-    public RepaymentDTO getRepayments() {
-        return repayments;
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public void setRepayments(RepaymentDTO repayments) {
-        this.repayments = repayments;
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 }
